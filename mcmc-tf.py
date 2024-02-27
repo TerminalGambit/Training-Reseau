@@ -37,7 +37,6 @@ def mcmc(data):
     # Define the kernel with the log joint probability function specific to the given data
     kernel = tfp.mcmc.RandomWalkMetropolis(
         target_log_prob_fn=make_log_joint_prob(data),
-        seed=0
     )
 
     # Sample from the chain
