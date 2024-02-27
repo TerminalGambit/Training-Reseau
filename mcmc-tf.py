@@ -8,57 +8,57 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import matplotlib.pyplot as plt
 
-# Set random seed
+# Set random seed for reproducibility
 np.random.seed(0)
 tf.random.set_seed(0)
 
-# Define the model
+# Define the model using TensorFlow Probability's JointDistributionSequential
 model = tfp.distributions.JointDistributionSequential([
-    tfp.distributions.Normal(loc=0., scale=1.),  # Prior
-    lambda loc: tfp.distributions.Normal(loc=loc, scale=1.)  # Likelihood
+    tfp.distributions.Normal(loc=0., scale=1.),  # Prior distribution
+    lambda loc: tfp.distributions.Normal(loc=loc, scale=1.)  # Likelihood given the prior
 ])
 
-# Define the log joint probability with data parameter
+# Define a log joint probability function with data
 def make_log_joint_prob(data):
     def log_joint_prob(loc):
         return model.log_prob((loc, data))
     return log_joint_prob
 
-# Define the MCMC with data parameter
+# Define the Monte Carlo Markov Chain (MCMC) function
 def mcmc(data):
-    # Define the number of samples and burn-in steps
+    # Define the number of samples and the number of burn-in steps
     num_samples = 1000
     num_burnin_steps = 500
 
-    # Define the initial state and step size
+    # Initial state for the chain
     initial_state = np.array(0., dtype=np.float32)
-    step_size = np.array(0.5, dtype=np.float32)
 
-    # Define the kernel with the log joint probability function specific to the given data
+    # Define the MCMC kernel
     kernel = tfp.mcmc.RandomWalkMetropolis(
         target_log_prob_fn=make_log_joint_prob(data),
     )
 
-    # Sample from the chain
-    states, kernel_results = tfp.mcmc.sample_chain(
+    # Sample from the Markov chain
+    states, _ = tfp.mcmc.sample_chain(
         num_results=num_samples,
         current_state=initial_state,
         kernel=kernel,
         num_burnin_steps=num_burnin_steps,
-        trace_fn=None
+        trace_fn=None  # Adjust here if you're interested in diagnostics
     )
 
     return states
 
-# Main function to run the MCMC and plot results
+
+# Main function to execute the MCMC simulation and plot the results
 def main():
-    # Define the data
+    # Example data point
     data = np.array(1., dtype=np.float32)
 
-    # Run MCMC
+    # Run MCMC to sample from the posterior given the data
     trace = mcmc(data)
 
-    # Plot the trace
+    # Plotting the trace of the samples
     plt.plot(trace)
     plt.xlabel('Sample index')
     plt.ylabel('Position')
@@ -68,3 +68,4 @@ def main():
 # Execute the main function
 if __name__ == "__main__":
     main()
+
